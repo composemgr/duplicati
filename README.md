@@ -47,8 +47,8 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/config/duplicati` - Data storage
-- `./rootfs/data/duplicati` - Data storage
+- `./volumes/config/duplicati` - Data storage
+- `./volumes/data/duplicati` - Data storage
 
 ## 🔍 Logging
 
