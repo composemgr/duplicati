@@ -21,8 +21,8 @@ services:
       PUID: ${SERVICE_USER:-1000}
       PGID: ${SERVICE_GROUP:-1000}
     volumes:
-      - ./rootfs/config/duplicati:/config
-      - ./rootfs/data/duplicati:/data
+      - ./volumes/config/duplicati:/config
+      - ./volumes/data/duplicati:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8200"]
       interval: 30s
