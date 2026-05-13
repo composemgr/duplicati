@@ -1,5 +1,6 @@
 # nginx proxy address - http://172.17.0.1:8200
 
+name: duplicati
 x-logging: &default-logging
   driver: json-file
   options:
@@ -8,14 +9,15 @@ x-logging: &default-logging
 
 services:
   duplicati:
-    image: duplicati/duplicati:latest
+    image: lscr.io/linuxserver/duplicati:latest
+    pull_policy: always
     container_name: duplicati-app
-    restart: unless-stopped
+    restart: always
     logging: *default-logging
     networks:
       - duplicati
     ports:
-      - "8200:8200"
+      - "172.17.0.1:8200:8200"
     environment:
       TZ: ${TZ:-America/New_York}
       PUID: ${SERVICE_USER:-1000}
@@ -23,6 +25,7 @@ services:
     volumes:
       - ./volumes/config/duplicati:/config
       - ./volumes/data/duplicati:/data
+      - /:/source:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8200"]
       interval: 30s
@@ -31,4 +34,5 @@ services:
 
 networks:
   duplicati:
+    name: duplicati
     external: false
