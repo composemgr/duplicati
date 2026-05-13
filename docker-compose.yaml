@@ -16,12 +16,16 @@ services:
     logging: *default-logging
     networks:
       - duplicati
+      - proxy
+      - cloudflare
     ports:
       - "172.17.0.1:8200:8200"
     environment:
       TZ: ${TZ:-America/New_York}
       PUID: ${SERVICE_USER:-1000}
       PGID: ${SERVICE_GROUP:-1000}
+      CONTAINER_NAME: duplicati-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     volumes:
       - ./volumes/config/duplicati:/config
       - ./volumes/data/duplicati:/data
@@ -31,8 +35,28 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - 'traefik.enable=true'
+      - 'cloudflare.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'cloudflare.service=http://duplicati-app:8200'
+      - 'cloudflare.hostname=duplicati.${CLOUDFLARE_ZONE_NAME:-}'
+      - 'traefik.http.routers.duplicati-app.entrypoints=http'
+      - 'traefik.http.routers.duplicati-app-secure.tls=true'
+      - 'traefik.http.routers.duplicati-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.middlewares.duplicati-app-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.duplicati-app.middlewares=duplicati-app-https-redirect'
+      - 'traefik.http.routers.duplicati-app-secure.entrypoints=https'
+      - 'traefik.http.routers.duplicati-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.routers.duplicati-app-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.duplicati-app-secure.service=duplicati-app'
+      - 'traefik.http.services.duplicati-app.loadbalancer.server.port=8200'
 
 networks:
   duplicati:
     name: duplicati
     external: false
+  proxy:
+    external: true
+  cloudflare:
+    external: true
