@@ -1,0 +1,45 @@
+name: duplicati
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  duplicati:
+    image: lscr.io/linuxserver/duplicati:latest
+    container_name: duplicati-app
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: duplicati-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      PUID: ${SERVICE_USER:-1000}
+      PGID: ${SERVICE_GROUP:-1000}
+    volumes:
+      - './volumes/config/duplicati:/config'
+      - './volumes/data/duplicati:/data'
+      - '/:/source:ro'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8200']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - 'cloudflare.enable=true'
+      - 'cloudflare.service=http://duplicati-app:8200'
+      - 'cloudflare.hostname=${BASE_HOST_NAME:-$HOSTNAME}'
+    networks:
+      - duplicati
+      - cloudflare
+
+networks:
+  duplicati:
+    name: duplicati
+    external: false
+  cloudflare:
+    external: true
